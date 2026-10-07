@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Ad Director</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#15171b;--panel:#1c1f25;--line:#2b2f37;--tx:#e9e7e2;--mu:#9a9ea8;--ac:#e2b560;--ok:#7fc8a0;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#15171b}}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.55 'Instrument Sans',system-ui,sans-serif}
+main{max-width:1080px;margin:0 auto;padding:24px 20px 80px}
+h1{font-size:38px;line-height:1.1;margin:8px 0 10px;font-weight:600;letter-spacing:-.02em}h2{font-size:22px;margin:30px 0 12px;font-weight:600}h3{font-size:16px;margin:0 0 6px}
+p{margin:0 0 10px}.mu{color:var(--mu)}.sm{font-size:13px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.logo{font-weight:700;font-size:17px}nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{background:none;border:1px solid transparent;color:var(--mu);padding:5px 10px;border-radius:8px;font:inherit;font-size:13px;cursor:pointer}
+nav button.on{color:var(--tx);border-color:var(--line);background:var(--panel)}nav button:disabled{opacity:.35;cursor:default}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+.grid{display:grid;gap:14px}.g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}.g3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+label{display:block;font-size:13px;color:var(--mu);margin:0 0 4px}
+input,select,textarea{width:100%;background:#121418;color:var(--tx);border:1px solid var(--line);border-radius:9px;padding:10px 12px;font:inherit}
+textarea{resize:vertical;min-height:64px}input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.btn{background:var(--ac);color:#1a1405;border:0;border-radius:9px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer}
+.btn.ghost{background:none;color:var(--tx);border:1px solid var(--line)}.btn.sm{padding:5px 10px;font-size:13px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.err{color:#f0907f;font-size:13px;margin-top:8px;min-height:18px}
+.tag{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:2px 10px;font-size:12px;color:var(--mu);margin:0 6px 6px 0}
+.dir{cursor:pointer;transition:border-color .2s,transform .2s}.dir:hover,.dir.sel{border-color:var(--ac)}
+.kv{display:grid;grid-template-columns:110px 1fr;gap:4px 12px;font-size:14px}.kv b{color:var(--mu);font-weight:500}
+.shot{display:grid;grid-template-columns:150px 1fr;gap:16px}.frame{aspect-ratio:9/16;border:1px solid var(--line);border-radius:10px;background:linear-gradient(160deg,#242830,#171a1f);display:flex;align-items:flex-end;padding:8px;font-size:11px;color:var(--mu)}
+.frame.r1{aspect-ratio:1}.frame.r16{aspect-ratio:16/9}
+@media(max-width:600px){.shot{grid-template-columns:1fr}.frame{max-width:140px}h1{font-size:30px}}
+.wf{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+.wf g.n{cursor:pointer}.wf rect{fill:#23272f;stroke:var(--line);transition:stroke .2s}.wf g.n:hover rect,.wf g.on rect{stroke:var(--ac)}.wf text{fill:var(--tx);font-size:13px}.wf path{stroke:#454b57;fill:none}
+.prog li{color:var(--mu);list-style:none;padding:6px 0}.prog li.done{color:var(--ok)}.prog ul{padding:0;margin:16px 0}
+.bar{height:3px;background:var(--line);border-radius:3px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ac);width:0;transition:width .5s}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--tx);color:#111;padding:8px 16px;border-radius:99px;font-size:13px;display:none}
+pre{white-space:pre-wrap;background:#121418;border:1px solid var(--line);border-radius:10px;padding:12px;max-height:260px;overflow:auto;font-size:12px}
+@media print{header,.row,.btn,.toast{display:none!important}body{background:#fff;color:#000}.card{border-color:#ccc;background:#fff}.mu,.kv b{color:#444}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body><main>
+<header><span class="logo">Ad Director</span><nav id="nav"></nav></header>
+<div id="v"></div></main><div class="toast" id="toast"></div>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let TT=null;const STEPS=[['home','Brief'],['analysis','Product'],['dirs','Directions'],['plan','Storyboard'],['ad','Video ad'],['flow','Workflow'],['vars','Variations'],['out','Export']];
+let S={step:'home',max:0,opt:{platform:'Instagram',format:'9:16',dur:15,goal:'Conversions',ctx:''},url:'',err:''};
+const DEMO={name:'Velocity X Running Shoes',brand:'Velocity',cat:'Running footwear',price:'$129.99',desc:'Lightweight, responsive running shoes for speed and endurance.',pos:'Performance running shoes for serious recreational athletes.',feats:['Carbon-fiber plate','ReactiveX foam','Breathable mesh','7.2 oz per shoe'],usp:['20% faster energy return','Reduced leg fatigue','Lightweight','Premium comfort'],aud:'Recreational runners, 18–30',problem:'Runs that feel heavy by mile three',emo:'Confidence',tone:'Driven and precise',cta:'Shop Velocity X',noun:'shoe',hero:'20% faster energy return'};
+const sp=t=>(t||'').split(/[,;\n]/).map(x=>x.trim()).filter(Boolean);
+function fromDet(d,u){const b=fromUrl(u)||{brand:d.name.split(' ')[0],cat:'Product'},f=sp(d.feats),k=sp(d.usp);
+ return{name:d.name,brand:b.brand,cat:b.cat,price:d.price||'See product page',desc:d.desc||d.name+'.',pos:d.desc||'A considered choice from '+b.brand+'.',feats:[...f,'Core feature','Build quality','Everyday use'].slice(0,Math.max(f.length,3)),usp:[...k,...f,'Clear everyday benefit','Quality you can see','Easy to choose'].slice(0,Math.max(k.length,4)),aud:d.aud||'Value-conscious buyers, 22–40',problem:'Choosing between too many similar options',emo:'Confidence',tone:'Clear and warm',cta:d.offer?'Shop now: '+d.offer:'Shop now',noun:'product',hero:(k[0]||f[0]||'the one thing it does best'),offer:d.offer}}
+function fromUrl(u){let h;try{h=new URL(/^https?:/.test(u)?u:'https://'+u)}catch(e){return null}
+ if(!h.hostname.includes('.'))return null;if(/velocity/i.test(h.href))return{...DEMO};
+ const slug=(h.pathname.split('/').filter(Boolean).pop()||h.hostname.replace(/^www\./,'').split('.')[0]).replace(/[-_]+/g,' ').replace(/\.\w+$/,'');
+ const name=slug.replace(/\b\w/g,c=>c.toUpperCase());const brand=h.hostname.replace(/^www\./,'').split('.')[0];
+ return{name,brand:brand[0].toUpperCase()+brand.slice(1),cat:'Consumer product',price:'See product page',desc:`${name} from ${brand}. Details estimated from the link; edit any field below.`,pos:`A considered everyday choice from ${brand}.`,feats:['Core feature','Build quality','Everyday use'],usp:['Clear everyday benefit','Quality you can see','Easy to choose'],aud:'Value-conscious buyers, 22–40',problem:'Choosing between too many similar options',emo:'Reassurance',tone:'Clear and warm',cta:'Shop now',noun:'product',hero:'the one thing it does best',est:true}}
+const mkDirs=p=>[
+{id:'perf',name:'Performance',concept:`Fast, cinematic proof that ${p.name} moves you faster.`,hook:`${p.hero}. Watch it happen.`,visual:'High-contrast, low-angle tracking, hard cuts on the beat, speed ramps.',tone:'Driven, precise',aud:p.aud,why:`Leads with ${p.hero}; ideal when the goal is conversion and the benefit is measurable.`,cta:p.cta},
+{id:'life',name:'Lifestyle',concept:`A documentary look at an ordinary day made better by ${p.name}.`,hook:`Some days run on the small things that just work.`,visual:'Natural light, handheld, real locations, unscripted textures.',tone:'Honest, grounded',aud:`${p.aud}, routine builders`,why:'Builds trust and identification; strong for brand building and longer watch time.',cta:'See how it fits your day'},
+{id:'story',name:'Story',concept:`A short emotional arc: doubt, effort, and a small win with ${p.name}.`,hook:`"I didn't think something this small would matter."`,visual:'Intimate close-ups, warm grade, deliberate pacing, one sustained moment.',tone:'Emotional, hopeful',aud:`${p.aud}, motivated by personal progress`,why:`Creates feeling before features, so ${p.emo.toLowerCase()} carries into the purchase.`,cta:p.cta},
+{id:'ugc',name:'UGC / Social',concept:`A real customer talks to camera about why ${p.name} earned a place in their routine.`,hook:`Okay, I need to tell you what changed since I switched.`,visual:'Phone-shot selfie framing, captions, jump cuts, casual setting.',tone:'Candid, peer-to-peer',aud:'Followers who trust peers over brands',why:'Native to the feed, low production cost, and easy to test in volume.',cta:'Tap to try it'}];
+const ST={perf:{cams:['Low tracking at ground level','Fast whip pan','Macro slide across the product','Overhead drone pull-up','Locked-off close-up','Hero push-in'],light:'Hard rim light, cool shadows',motion:'Speed ramps, hard cuts',look:'cinematic'},
+life:{cams:['Handheld wide, window light','Shoulder-level follow','Soft rack focus to product','Walking side-profile','Over-the-shoulder','Static frame, natural light'],light:'Soft natural daylight',motion:'Gentle handheld drift',look:'documentary'},
+story:{cams:['Slow push on a face','Close-up on hesitation','Rack focus from face to product','Slow tracking beside subject','Intimate close-up','Wide hold, subject small in frame'],light:'Warm low-key, practical lamps',motion:'Slow, deliberate moves',look:'cinematic narrative'},
+ugc:{cams:['Selfie cam, arm extended','Selfie, jump cut','Phone held to product','Mirror shot','Selfie, close','Selfie, wave and point'],light:'Available room light',motion:'Handheld, jump cuts',look:'phone-shot UGC'}};
+const BEATS=['Hook','Problem','Reveal','Proof','Detail','CTA'];
+function mkShots(p,d,o){const n=o.dur<=15?4:o.dur<=30?5:6;const pick=n==4?[0,2,3,5]:n==5?[0,1,2,3,5]:[0,1,2,3,4,5];const st=ST[d.id],base=Math.floor(o.dur/n);
+ const sc=[`Opening image that stops the scroll: ${d.hook}`,`The frustration: ${p.problem}.`,`${p.name} enters frame, ${p.price}.`,`Proof of benefit: ${p.usp[0]}.`,`Detail on ${p.feats[0]} and ${p.feats[1]}.`,`Final product frame with brand and offer.`];
+ const vo=[d.hook,`You know the feeling: ${p.problem.toLowerCase()}.`,`Meet ${p.name}.`,`${p.usp[0]}. ${p.usp[1]}.`,`${p.feats.slice(0,2).join(', ')}.`,`${d.cta}.${p.offer?' '+p.offer+'.':''}`];
+ const tx=[d.hook.length<44?d.hook:'Watch this',p.problem,p.name,p.usp[0],p.feats[0],d.cta+(p.offer?' · '+p.offer:'')];
+ return pick.map((b,i)=>({id:i+1,beat:BEATS[b],dur:i==n-1?o.dur-base*(n-1):base,scene:sc[b],camera:st.cams[b],subject:b==5||b==2?`${p.name} centered, label visible`:`${p.aud.split(',')[0]} in action`,product:b>=2?'Hero placement, clear logo':'Subtle presence',lighting:st.light,environment:d.id=='ugc'?'Everyday home or street':'Clean, well-lit setting',motion:st.motion,vo:vo[b],text:tx[b],prompt:`${st.look} ${o.format} shot, ${st.cams[b].toLowerCase()}, ${sc[b].toLowerCase()} ${st.light.toLowerCase()}. ${st.motion}. Photoreal, 4K.`}))}
+const mkVars=(p,o)=>[['Performance',`${p.usp[0]}. Proven.`,'Urgent, confident',p.cta,'High-contrast speed cuts','Competitive, data-minded buyers'],['Emotional',`The small thing that changed my day.`,'Warm, human','See it for yourself','Warm grade, close faces',`People who buy on feeling`],['UGC',`I switched and honestly, wow.`,'Casual, honest','Tap to try it','Selfie framing, captions','Friends-of-friends, social proof seekers'],['Premium',`${p.name}. Made with intent.`,'Quiet, elevated','Discover the detail','Macro textures, slow motion','Quality-first buyers, gift givers']].map(a=>({name:a[0],hook:a[1],tone:a[2],cta:a[3],visual:a[4],angle:a[5]}));
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display='none',1800)}
+function go(s){stopAd();S.step=s;S.max=Math.max(S.max,STEPS.findIndex(x=>x[0]==s));render();window.scrollTo(0,0)}
+function save(){try{localStorage.setItem('adDirector',JSON.stringify(S))}catch(e){}}
+function analyze(demo){const o=S.opt;if(demo){S.opt={platform:'Instagram',format:'9:16',dur:15,goal:'Conversions',ctx:'Instagram product campaign'};S.url='https://velocity.example/products/velocity-x-running-shoes';S.det={}}
+ else{S.opt={platform:$('#pl').value,format:$('#fm').value,dur:+$('#du').value,goal:$('#gl').value,ctx:$('#cx').value};S.url=$('#url').value.trim();const g=id=>($('#'+id).value||'').trim();S.det={name:g('pn'),price:g('pp'),desc:g('pd'),feats:g('pf'),usp:g('pu'),aud:g('pa'),offer:g('po')}}
+ const p=S.det&&S.det.name?fromDet(S.det,S.url):fromUrl(S.url);if(!p){S.err='Enter the product name and details below, or a full product link such as https://brand.com/products/item.';render();return}
+ S.err='';S.p=p;S.dirs=mkDirs(p);S.sel=null;S.shots=null;S.vars=mkVars(p,S.opt);S.max=0;S.step='load';render();
+ const bar=$('#bar'),items=[...document.querySelectorAll('.prog li')];items.forEach((li,i)=>setTimeout(()=>{li.classList.add('done');bar.style.width=(i+1)*25+'%'},500*(i+1)));
+ setTimeout(()=>go('analysis'),2300)}
+function pick(i){S.sel=i;S.shots=mkShots(S.p,S.dirs[i],S.opt);S.eid=0;save();go('plan')}
+function nodes(){const p=S.p,d=S.dirs[S.sel],sh=S.shots;return[
+ {k:'Product',x:0,y:0,t:`${p.name} · ${p.price}\n${p.desc}`},{k:'Creative Brief',x:1,y:0,t:`Problem: ${p.problem}\nEmotion: ${p.emo}\nTone: ${p.tone}\nCTA: ${p.cta}`},
+ {k:'Audience',x:2,y:0,t:p.aud},{k:'Direction',x:3,y:0,t:`${d.name}: ${d.concept}\nHook: ${d.hook}`},
+ {k:'Script',x:4,y:0,t:sh.map(s=>s.vo).join('\n')},{k:'Shot List',x:5,y:0,t:sh.map(s=>`${s.id}. ${s.beat} (${s.dur}s)`).join('\n')},
+ ...sh.map((s,i)=>({k:`Shot ${s.id}: ${s.beat}`,x:6,y:i,t:`${s.scene}\nCamera: ${s.camera}\nPrompt: ${s.prompt}`})),
+ {k:'Final Ad',x:7,y:0,t:`${S.opt.platform} ${S.opt.format}, ${S.opt.dur}s. Goal: ${S.opt.goal}. Assemble shots, add voiceover, captions, and end card.`}]}
+function exportObj(){return{product:S.p,campaign:S.opt,direction:S.dirs[S.sel],storyboard:S.shots,variations:S.vars}}
+function copy(txt,msg){const done=()=>toast(msg);(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(done).catch(()=>{const o=$('#fallback');o.style.display='block';o.textContent=txt;toast('Select the text below to copy')})}
+const f=(id,l,v,ta)=>`<div><label>${l}</label>${ta?`<textarea data-f="${id}">${esc(v)}</textarea>`:`<input data-f="${id}" value="${esc(v)}">`}</div>`;
+function stopAd(){clearTimeout(TT);try{speechSynthesis.cancel()}catch(e){}}
+function drawScene(i){const st=$('#stage');if(!st)return;const s=S.shots[i],hue=[215,25,200,150,260,40][BEATS.indexOf(s.beat)]||200;
+ st.style.background=`linear-gradient(160deg,hsl(${hue},35%,24%),hsl(${hue},30%,8%))`;
+ st.innerHTML=`<div style="font-size:12px;opacity:.7">Shot ${s.id} of ${S.shots.length} · ${esc(s.beat)} · ${esc(s.camera)}</div><div style="font-size:clamp(22px,6vw,34px);font-weight:700;line-height:1.15;text-align:center;padding:0 6px">${esc(s.text)}</div><div style="font-size:13px;text-align:center;opacity:.85;font-style:italic">${esc(s.vo)}</div>`}
+function playAd(){stopAd();const vo=$('#vo').checked,total=S.shots.reduce((a,s)=>a+s.dur,0),pb=$('#pbar');let i=0;
+ pb.style.transition='none';pb.style.width='0';void pb.offsetWidth;pb.style.transition=`width ${total}s linear`;pb.style.width='100%';
+ const next=()=>{if(i>=S.shots.length)return;const s=S.shots[i];drawScene(i);if(vo){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(s.vo);u.rate=1.1;speechSynthesis.speak(u)}catch(e){}}i++;TT=setTimeout(next,s.dur*1000)};next()}
+const V={
+home(){const o=S.opt,d=S.det||{},fl=(id,l,v,ph)=>`<div><label for="${id}">${l}</label><input id="${id}" value="${esc(v)}" placeholder="${esc(ph||'')}"></div>`,opt=(a,v)=>a.map(x=>`<option ${x==v?'selected':''}>${x}</option>`).join('');return`<h1>Turn a product into a production-ready AI ad workflow.</h1><p class="mu">Paste a product link, set the campaign, and get a direction, script, storyboard, and workflow.</p>
+<div class="card grid" style="margin-top:20px"><div><label for="url">Product URL (optional if you fill in the details)</label><input id="url" placeholder="https://brand.com/products/item" value="${esc(S.url)}"></div>
+<div class="grid g3"><div><label>Platform</label><select id="pl">${opt(['Instagram','TikTok','YouTube','LinkedIn'],o.platform)}</select></div><div><label>Format</label><select id="fm">${opt(['9:16','1:1','16:9'],o.format)}</select></div><div><label>Duration</label><select id="du">${[15,30,60].map(x=>`<option value="${x}" ${x==o.dur?'selected':''}>${x} sec</option>`).join('')}</select></div><div><label>Campaign goal</label><select id="gl">${opt(['Awareness','Conversions','App installs','Brand building','Engagement'],o.goal)}</select></div></div>
+<div class="grid g2">${fl('pn','Product name',d.name,'Velocity X Running Shoes')}${fl('pp','Price',d.price,'$129.99')}${fl('pd','One-line description',d.desc,'Lightweight, responsive running shoes')}${fl('pa','Target audience',d.aud,'Recreational runners, 18–30')}${fl('pf','Features (comma separated)',d.feats,'Carbon-fiber plate, breathable mesh')}${fl('pu','Selling points (comma separated)',d.usp,'20% faster energy return, lightweight')}${fl('po','Offer (optional)',d.offer,'Free shipping this weekend')}</div><div><label>Context (optional)</label><textarea id="cx" placeholder="Launch window, offer, things to avoid">${esc(o.ctx)}</textarea></div>
+<div class="row"><button class="btn" onclick="analyze(false)">Analyze product</button><button class="btn ghost" onclick="analyze(true)">Run the Velocity X demo</button></div><div class="err">${esc(S.err)}</div></div>
+<p class="mu sm" style="margin-top:12px">This version builds the analysis from the link and your campaign settings. Live page reading and AI generation need a backend.</p>`},
+load(){return`<h1>Analyzing</h1><div class="bar"><i id="bar"></i></div><div class="prog"><ul><li>Reading product information</li><li>Understanding product positioning</li><li>Identifying potential audience</li><li>Preparing creative directions</li></ul></div>`},
+analysis(){const p=S.p;return`<h1>${esc(p.name)}</h1><p class="mu">${esc(p.desc)}</p>${p.est?'<p class="sm" style="color:var(--ac)">Estimated from the link. Real page data needs a fetch service.</p>':''}
+<div class="grid g2"><div class="card kv"><b>Brand</b><span>${esc(p.brand)}</span><b>Category</b><span>${esc(p.cat)}</span><b>Price</b><span>${esc(p.price)}</span><b>Positioning</b><span>${esc(p.pos)}</span><b>Audience</b><span>${esc(p.aud)}</span></div>
+<div class="card"><h3>Features</h3>${p.feats.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}<h3 style="margin-top:10px">Key selling points</h3>${p.usp.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div></div>
+<h2>Creative brief</h2><div class="card kv"><b>Target audience</b><span>${esc(p.aud)}</span><b>Primary problem</b><span>${esc(p.problem)}</span><b>Value proposition</b><span>${esc(p.usp[0])}, ${esc(p.usp[2].toLowerCase())}</span><b>Desired emotion</b><span>${esc(p.emo)}</span><b>Tone</b><span>${esc(p.tone)}</span><b>Suggested CTA</b><span>${esc(p.cta)}</span></div>
+<div class="row" style="margin-top:18px"><button class="btn" onclick="go('dirs')">Generate creative directions</button></div>`},
+dirs(){return`<h1>Choose a creative direction</h1><p class="mu">Four different ways to sell the same product.</p><div class="grid g2">${S.dirs.map((d,i)=>`<div class="card dir ${S.sel===i?'sel':''}" onclick="pick(${i})" tabindex="0" onkeydown="if(event.key=='Enter')pick(${i})"><h3>${d.name}</h3><p>${esc(d.concept)}</p><div class="kv sm"><b>Hook</b><span>${esc(d.hook)}</span><b>Visual</b><span>${esc(d.visual)}</span><b>Tone</b><span>${esc(d.tone)}</span><b>Audience</b><span>${esc(d.aud)}</span><b>Why it works</b><span>${esc(d.why)}</span><b>CTA</b><span>${esc(d.cta)}</span></div><div class="row" style="margin-top:12px"><button class="btn sm">Use this direction</button></div></div>`).join('')}</div>`},
+plan(){const d=S.dirs[S.sel],o=S.opt,e=S.shots[S.eid]||S.shots[0],fc=o.format=='1:1'?'r1':o.format=='16:9'?'r16':'';
+ return`<h1>${d.name} blueprint</h1><div class="card kv"><b>Campaign</b><span>${esc(S.p.name)} · ${o.platform} · ${o.format} · ${o.dur}s · ${o.goal}</span><b>Hook</b><span>${esc(d.hook)}</span><b>Core message</b><span>${esc(S.p.usp[0])}</span><b>CTA</b><span>${esc(d.cta)}</span><b>Tone</b><span>${esc(d.tone)}</span><b>Visual style</b><span>${esc(d.visual)}</span><b>Audience</b><span>${esc(d.aud)}</span></div>
+<h2>Script</h2><div class="card">${S.shots.map(s=>`<p><span class="mu sm">Shot ${s.id}</span> &nbsp;${esc(s.vo)}</p>`).join('')}</div>
+<h2>Storyboard</h2><div class="grid">${S.shots.map((s,i)=>`<div class="card shot"><div class="frame ${fc}">Shot ${s.id}</div><div><h3>${s.beat} · ${s.dur}s</h3><div class="kv sm"><b>Scene</b><span>${esc(s.scene)}</span><b>Camera</b><span>${esc(s.camera)}</span><b>Subject</b><span>${esc(s.subject)}; ${esc(s.product)}</span><b>Lighting</b><span>${esc(s.lighting)}</span><b>Motion</b><span>${esc(s.motion)}</span><b>Voiceover</b><span>${esc(s.vo)}</span><b>On-screen</b><span>${esc(s.text)}</span><b>Prompt</b><span>${esc(s.prompt)}</span></div>
+<div class="row" style="margin-top:10px"><button class="btn sm ghost" onclick="S.eid=${i};render();$('#ed').scrollIntoView({behavior:'smooth'})">Edit</button><button class="btn sm ghost" onclick="regen(${i})">Regenerate</button><button class="btn sm ghost" onclick="dup(${i})">Duplicate</button><button class="btn sm ghost" onclick="del(${i})">Delete</button></div></div></div>`).join('')}</div>
+<h2 id="ed">Shot editor · Shot ${e.id}</h2><div class="card grid g2">${f('dur','Duration (sec)',e.dur)}${f('scene','Scene',e.scene,1)}${f('camera','Camera',e.camera)}${f('lighting','Lighting',e.lighting)}${f('subject','Character',e.subject)}${f('product','Product',e.product)}${f('environment','Environment',e.environment)}${f('motion','Motion',e.motion)}${f('vo','Voiceover',e.vo,1)}${f('text','On-screen text',e.text)}${f('prompt','Generation prompt',e.prompt,1)}</div>
+<div class="row" style="margin-top:18px"><button class="btn" onclick="save();go('ad')">Preview video ad</button><button class="btn ghost" onclick="save();go('flow')">Build production workflow</button><button class="btn ghost" onclick="go('dirs')">Change direction</button></div>`},
+ad(){const o=S.opt,fc=o.format=='1:1'?'1/1':o.format=='16:9'?'16/9':'9/16',w=o.format=='16:9'?'100%':o.format=='1:1'?'400px':'290px',tot=S.shots.reduce((a,s)=>a+s.dur,0);
+ return`<h1>Video ad</h1><p class="mu">A playable cut of your storyboard: timed scenes, on-screen text, and voiceover. ${tot} seconds, ${o.format}.</p>
+<div class="grid g2" style="align-items:start"><div><div id="stage" style="aspect-ratio:${fc};width:100%;max-width:${w};display:flex;flex-direction:column;justify-content:space-between;padding:16px;border-radius:14px;border:1px solid var(--line);color:#fff;overflow:hidden"></div>
+<div class="bar" style="margin-top:8px;max-width:${w}"><i id="pbar"></i></div>
+<div class="row" style="margin-top:12px"><button class="btn" onclick="playAd()">Play ad</button><button class="btn ghost" onclick="stopAd()">Stop</button><label style="display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" id="vo" checked style="width:auto"> Voiceover</label></div></div>
+<div class="card"><h3>Script</h3>${S.shots.map(s=>`<p><span class="mu sm">${s.dur}s · ${esc(s.beat)}</span><br>${esc(s.vo)}</p>`).join('')}</div></div>
+<p class="mu sm" style="margin-top:14px">This is an animatic: it shows timing, copy, and voice. For real footage, copy the shot prompts into a video generator.</p>
+<div class="row"><button class="btn" onclick="copy(S.shots.map(s=>'Shot '+s.id+' ('+s.dur+'s): '+s.prompt).join('\n\n'),'Prompts copied')">Copy shot prompts</button><button class="btn ghost" onclick="go('plan')">Edit shots</button><button class="btn ghost" onclick="go('flow')">Production workflow</button></div><pre id="fallback" style="display:none;margin-top:14px"></pre>`},
+flow(){const N=nodes(),W=160,H=64,rows=Math.max(S.shots.length,2),h=rows*86+30,pos=n=>[20+n.x*W,n.k.startsWith('Shot')||n.k=='Final Ad'||n.x<6?(n.x>=6&&n.k!='Final Ad'?20+n.y*86:(rows*86)/2-H/2+10):0];
+ const P=n=>{const y=n.x>=6&&n.k!='Final Ad'?20+n.y*86:(rows*86)/2-H/2+10;return[20+n.x*W,y]};
+ const link=(a,b)=>{const[x1,y1]=P(a),[x2,y2]=P(b);return`<path d="M${x1+132} ${y1+H/2} C${x1+148} ${y1+H/2} ${x2-16} ${y2+H/2} ${x2} ${y2+H/2}"/>`};
+ const sl=N.find(n=>n.k=='Shot List'),fin=N.find(n=>n.k=='Final Ad');let L='';N.forEach((n,i)=>{if(i<5)L+=link(n,N[i+1])});N.filter(n=>n.k.startsWith('Shot ')).forEach(n=>{L+=link(sl,n)+link(n,fin)});
+ const sel=N[S.nid||0];
+ return`<h1>Production workflow</h1><p class="mu">Select a node to inspect it.</p><div class="wf"><svg width="${8*W+20}" height="${h}">${L}${N.map((n,i)=>{const[x,y]=P(n);return`<g class="n ${(S.nid||0)==i?'on':''}" onclick="S.nid=${i};render()" tabindex="0" onkeydown="if(event.key=='Enter'){S.nid=${i};render()}"><rect x="${x}" y="${y}" width="132" height="${H}" rx="10"/><text x="${x+12}" y="${y+H/2+4}">${esc(n.k.length>17?n.k.slice(0,16)+'…':n.k)}</text></g>`}).join('')}</svg></div>
+<h2>${esc(sel.k)}</h2><div class="card"><pre>${esc(sel.t)}</pre></div><div class="row" style="margin-top:18px"><button class="btn" onclick="go('vars')">Generate variations</button></div>`},
+vars(){return`<h1>Creative variations</h1><p class="mu">Four alternates to test against the main direction.</p><div class="grid g2">${S.vars.map(v=>`<div class="card"><h3>${v.name}</h3><div class="kv sm"><b>Hook</b><span>${esc(v.hook)}</span><b>Tone</b><span>${esc(v.tone)}</span><b>CTA</b><span>${esc(v.cta)}</span><b>Visual</b><span>${esc(v.visual)}</span><b>Audience</b><span>${esc(v.angle)}</span></div></div>`).join('')}</div><div class="row" style="margin-top:18px"><button class="btn" onclick="go('out')">Export plan</button></div>`},
+out(){return`<h1>Export your creative plan</h1><div class="row"><button class="btn" onclick="window.print()">Save as PDF</button><button class="btn ghost" onclick="copy(JSON.stringify(exportObj(),null,2),'JSON copied')">Copy JSON</button><button class="btn ghost" onclick="copy(flowText(),'Workflow copied')">Copy workflow</button><button class="btn ghost" onclick="copy(location.href.split('#')[0],'Link copied')">Share link</button><button class="btn ghost" onclick="save();toast('Project saved')">Save project</button></div>
+<pre id="fallback" style="display:none;margin-top:14px"></pre><h2>Summary</h2><div class="card kv"><b>Product</b><span>${esc(S.p.name)}</span><b>Direction</b><span>${esc(S.dirs[S.sel].name)}</span><b>Shots</b><span>${S.shots.length}, ${S.opt.dur}s total</span></div>`}};
+function flowText(){return nodes().map((n,i)=>`${i+1}. ${n.k}\n${n.t}`).join('\n\n')}
+function regen(i){const s=S.shots[i],c=ST[S.dirs[S.sel].id].cams,k=c.indexOf(s.camera);s.camera=c[(k+1)%c.length];s.prompt=s.prompt.replace(/shot, [^,]+,/,`shot, ${s.camera.toLowerCase()},`);render();toast('Shot regenerated')}
+function dup(i){S.shots.splice(i+1,0,{...S.shots[i]});S.shots.forEach((s,j)=>s.id=j+1);render();toast('Shot duplicated')}
+function del(i){if(S.shots.length<=2)return toast('Keep at least 2 shots');S.shots.splice(i,1);S.shots.forEach((s,j)=>s.id=j+1);S.eid=0;render()}
+document.addEventListener('input',e=>{const k=e.target.dataset?.f;if(!k)return;const s=S.shots[S.eid];s[k]=k=='dur'?Math.max(1,+e.target.value||1):e.target.value;save()});
+function render(){if(S.step=='plan'&&!S.shots)S.step='home';$('#nav').innerHTML=STEPS.map(([k,l],i)=>`<button class="${S.step==k?'on':''}" ${i>S.max||!S.p&&i>0?'disabled':''} onclick="go('${k}')">${l}</button>`).join('');
+ try{$('#v').innerHTML=V[S.step]();if(S.step=='ad')drawScene(0)}catch(e){$('#v').innerHTML='<div class="card"><h3>Something went wrong</h3><p class="mu">This step could not be displayed. Return to the brief and run the analysis again.</p><button class="btn" onclick="S.step=\'home\';render()">Back to brief</button></div>'}}
+render();
+</script></body></html>
